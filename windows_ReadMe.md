@@ -11,7 +11,6 @@ base-devel：提供基本开发工具（如 make）。
 mingw-w64-x86_64-toolchain：安装 MinGW 编译工具链。
 autoconf、automake、libtool：构建 libffi 所需
 
-
 cd 进入libffi的文件加目录，如
 ```MINGW64
 cd E:/code/LAB/LABdependLibs/baseLibs/libffi-master
