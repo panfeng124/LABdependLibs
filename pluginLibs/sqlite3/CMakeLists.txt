@@ -52,6 +52,6 @@ if(BUILD_EXECUTABLE)
             main.cpp
     )
     target_link_libraries(${PROJECT_NAME}_APP
-            ${CMAKE_CURRENT_SOURCE_DIR}/lib/libsqlite3.dylib
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib/libsqlite3.dll
     )
 endif ()
