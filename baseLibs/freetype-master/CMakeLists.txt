@@ -109,17 +109,16 @@
 #   support).
 
 # To minimize the number of cmake_policy() workarounds,
-# CMake >= 3 is requested.
-cmake_minimum_required(VERSION 3.0)
+# modern CMake is requested.
+cmake_minimum_required(VERSION 3.5)
 
-if (NOT CMAKE_VERSION VERSION_LESS 3.3)
-  # Allow symbol visibility settings also on static libraries. CMake < 3.3
-  # only sets the property on a shared library build.
+if(POLICY CMP0063)
   cmake_policy(SET CMP0063 NEW)
+endif()
 
-  # Support new IN_LIST if() operator.
+if(POLICY CMP0057)
   cmake_policy(SET CMP0057 NEW)
-endif ()
+endif()
 
 include(CheckIncludeFile)
 include(CMakeDependentOption)
