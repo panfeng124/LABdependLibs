@@ -155,9 +155,10 @@ OPTION( ASSIMP_INSTALL
   "Disable this if you want to use assimp as a submodule."
   ON
 )
+message("panFeng:set ASSIMP_WARNINGS_AS_ERRORS off")
 OPTION ( ASSIMP_WARNINGS_AS_ERRORS
-  "Treat all warnings as errors."
-  ON
+        "Treat all warnings as errors."
+        OFF
 )
 OPTION ( ASSIMP_ASAN
   "Enable AddressSanitizer."
