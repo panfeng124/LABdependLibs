@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2022, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -46,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ASSIMP_BUILD_NO_B3D_IMPORTER
 
 // internal headers
-#include "AssetLib/B3D/B3DImporter.h"
+#include "B3DImporter.h"
 #include "PostProcessing/ConvertToLHProcess.h"
 #include "PostProcessing/TextureTransform.h"
 
@@ -59,10 +59,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <memory>
 
-using namespace Assimp;
+namespace Assimp {
 using namespace std;
 
-static const aiImporterDesc desc = {
+static constexpr aiImporterDesc desc = {
     "BlitzBasic 3D Importer",
     "",
     "",
@@ -79,9 +79,9 @@ static const aiImporterDesc desc = {
 #pragma warning(disable : 4018)
 #endif
 
-//#define DEBUG_B3D
+// #define DEBUG_B3D
 
-template<typename T>
+template <typename T>
 void DeleteAllBarePointers(std::vector<T> &x) {
     for (auto p : x) {
         delete p;
@@ -329,7 +329,7 @@ void B3DImporter::ReadBRUS() {
             mat->AddProperty(&i, 1, AI_MATKEY_TWOSIDED);
         }
 
-        //Textures
+        // Textures
         for (int i = 0; i < n_texs; ++i) {
             int texid = ReadInt();
             if (texid < -1 || (texid >= 0 && texid >= static_cast<int>(_textures.size()))) {
@@ -372,7 +372,7 @@ void B3DImporter::ReadVRTS() {
         }
 
         if (_vflags & 2) {
-            ReadQuat(); //skip v 4bytes...
+            ReadQuat(); // skip v 4bytes...
         }
 
         for (int j = 0; j < _tcsets; ++j) {
@@ -469,9 +469,11 @@ void B3DImporter::ReadBONE(int id) {
 }
 
 // ------------------------------------------------------------------------------------------------
-void B3DImporter::ReadKEYS(aiNodeAnim *nodeAnim) {
-    vector<aiVectorKey> trans, scale;
-    vector<aiQuatKey> rot;
+void B3DImporter::ReadKEYS(AnimKeys& keys) {
+    vector<aiVectorKey>& trans = keys.positionKeys;
+    vector<aiVectorKey>& scale = keys.scalingKeys;
+    vector<aiQuatKey>& rot = keys.rotationKeys;
+
     int flags = ReadInt();
     while (ChunkSize()) {
         int frame = ReadInt();
@@ -484,21 +486,6 @@ void B3DImporter::ReadKEYS(aiNodeAnim *nodeAnim) {
         if (flags & 4) {
             rot.emplace_back(frame, ReadQuat());
         }
-    }
-
-    if (flags & 1) {
-        nodeAnim->mNumPositionKeys = static_cast<unsigned int>(trans.size());
-        nodeAnim->mPositionKeys = to_array(trans);
-    }
-
-    if (flags & 2) {
-        nodeAnim->mNumScalingKeys = static_cast<unsigned int>(scale.size());
-        nodeAnim->mScalingKeys = to_array(scale);
-    }
-
-    if (flags & 4) {
-        nodeAnim->mNumRotationKeys = static_cast<unsigned int>(rot.size());
-        nodeAnim->mRotationKeys = to_array(rot);
     }
 }
 
@@ -542,6 +529,7 @@ aiNode *B3DImporter::ReadNODE(aiNode *parent) {
     std::unique_ptr<aiNodeAnim> nodeAnim;
     vector<unsigned> meshes;
     vector<aiNode *> children;
+    AnimKeys keys;
 
     while (ChunkSize()) {
         const string chunk = ReadChunk();
@@ -560,7 +548,7 @@ aiNode *B3DImporter::ReadNODE(aiNode *parent) {
                 nodeAnim.reset(new aiNodeAnim);
                 nodeAnim->mNodeName = node->mName;
             }
-            ReadKEYS(nodeAnim.get());
+            ReadKEYS(keys);
         } else if (chunk == "NODE") {
             aiNode *child = ReadNODE(node);
             children.push_back(child);
@@ -569,6 +557,21 @@ aiNode *B3DImporter::ReadNODE(aiNode *parent) {
     }
 
     if (nodeAnim) {
+        if (!keys.positionKeys.empty()) {
+            nodeAnim->mNumPositionKeys = static_cast<unsigned int>(keys.positionKeys.size());
+            nodeAnim->mPositionKeys = to_array(keys.positionKeys);
+        }
+
+        if (!keys.scalingKeys.empty()) {
+            nodeAnim->mNumScalingKeys = static_cast<unsigned int>(keys.scalingKeys.size());
+            nodeAnim->mScalingKeys = to_array(keys.scalingKeys);
+        }
+
+        if (!keys.rotationKeys.empty()) {
+            nodeAnim->mNumRotationKeys = static_cast<unsigned int>(keys.rotationKeys.size());
+            nodeAnim->mRotationKeys = to_array(keys.rotationKeys);
+        }
+
         _nodeAnims.emplace_back(std::move(nodeAnim));
     }
 
@@ -704,22 +707,22 @@ void B3DImporter::ReadBB3D(aiScene *scene) {
         }
     }
 
-    //nodes
+    // nodes
     scene->mRootNode = _nodes[0];
     _nodes.clear(); // node ownership now belongs to scene
 
-    //material
+    // material
     if (!_materials.size()) {
         _materials.emplace_back(std::unique_ptr<aiMaterial>(new aiMaterial));
     }
     scene->mNumMaterials = static_cast<unsigned int>(_materials.size());
     scene->mMaterials = unique_to_array(_materials);
 
-    //meshes
+    // meshes
     scene->mNumMeshes = static_cast<unsigned int>(_meshes.size());
     scene->mMeshes = unique_to_array(_meshes);
 
-    //animations
+    // animations
     if (_animations.size() == 1 && _nodeAnims.size()) {
 
         aiAnimation *anim = _animations.back().get();
@@ -737,5 +740,7 @@ void B3DImporter::ReadBB3D(aiScene *scene) {
     FlipWindingOrderProcess flip;
     flip.Execute(scene);
 }
+
+} // namespace Assimp
 
 #endif // !! ASSIMP_BUILD_NO_B3D_IMPORTER
