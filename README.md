@@ -1,0 +1,2 @@
+assimp
+编译完成后，需要将生产的config.h和revision.h替换
