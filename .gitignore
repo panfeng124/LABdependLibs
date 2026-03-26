@@ -3,6 +3,7 @@
 cmake-build-debug
 cmake-build-default
 cmake-build-release
+cmake-build*/
 .DS_Store
 
 build

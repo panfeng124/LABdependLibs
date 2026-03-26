@@ -24,10 +24,14 @@ Before that, remove the files created by this failed run with"
   rm -rf CMakeCache.txt CMakeFiles")
 endif ()
 
+set(FREETYPE_INCLUDE_DIRS "F:/PF/project/LABdependLibs/baseLibs/freetype-master/include")
+set(FREETYPE_INCLUDE_DIR_ft2build "F:/PF/project/LABdependLibs/baseLibs/freetype-master/include")
+set(FREETYPE_INCLUDE_DIR_freetype2 "F:/PF/project/LABdependLibs/baseLibs/freetype-master/include/freetype2")
+set(FREETYPE_LIBRARY "F:/PF/project/LABdependLibs/baseLibs/freetype-master/cmake-build-release/libfreetype.dll.a")
 
 ## HarfBuzz build configurations
 option(HB_HAVE_CAIRO "Enable cairo interop helpers" OFF)
-option(HB_HAVE_FREETYPE "Enable freetype interop helpers" OFF)
+option(HB_HAVE_FREETYPE "Enable freetype interop helpers" ON)
 option(HB_HAVE_GRAPHITE2 "Enable Graphite2 complementary shaper" OFF)
 option(HB_HAVE_GLIB "Enable glib unicode functions" OFF)
 option(HB_HAVE_ICU "Enable icu unicode functions" OFF)
