@@ -24,6 +24,12 @@ file(GLOB SOURCES CONFIGURE_DEPENDS
 
 add_library(yogacore SHARED ${SOURCES})
 
+if (MSVC)
+    set_target_properties(yogacore PROPERTIES
+            WINDOWS_EXPORT_ALL_SYMBOLS ON
+    )
+endif()
+
 # Yoga conditionally uses <android/log> when building for Android
 if (ANDROID)
     target_link_libraries(yogacore log)
