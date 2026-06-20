@@ -24,10 +24,15 @@ Before that, remove the files created by this failed run with"
   rm -rf CMakeCache.txt CMakeFiles")
 endif ()
 
-set(FREETYPE_INCLUDE_DIRS "F:/PF/project/LABdependLibs/baseLibs/freetype-master/include")
-set(FREETYPE_INCLUDE_DIR_ft2build "F:/PF/project/LABdependLibs/baseLibs/freetype-master/include")
-set(FREETYPE_INCLUDE_DIR_freetype2 "F:/PF/project/LABdependLibs/baseLibs/freetype-master/include/freetype2")
-set(FREETYPE_LIBRARY "F:/PF/project/LABdependLibs/baseLibs/freetype-master/cmake-build-release/freetype.lib")
+#set(FREETYPE_INCLUDE_DIRS "F:/PF/project/LABdependLibs/baseLibs/freetype-master/include")
+#set(FREETYPE_INCLUDE_DIR_ft2build "F:/PF/project/LABdependLibs/baseLibs/freetype-master/include")
+#set(FREETYPE_INCLUDE_DIR_freetype2 "F:/PF/project/LABdependLibs/baseLibs/freetype-master/include/freetype2")
+#set(FREETYPE_LIBRARY "F:/PF/project/LABdependLibs/baseLibs/freetype-master/cmake-build-release/freetype.lib")
+
+set(FREETYPE_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/../freetype-master/include")
+set(FREETYPE_INCLUDE_DIR_ft2build "${CMAKE_SOURCE_DIR}/../freetype-master/include")
+set(FREETYPE_INCLUDE_DIR_freetype2 "${CMAKE_SOURCE_DIR}/../freetype-master/include/freetype2")
+set(FREETYPE_LIBRARY "${CMAKE_SOURCE_DIR}/../freetype-master/cmake-build-release/freetype.lib")
 
 ## HarfBuzz build configurations
 option(HB_HAVE_CAIRO "Enable cairo interop helpers" OFF)
@@ -502,6 +507,9 @@ endif ()
 ## Define harfbuzz library
 add_library(harfbuzz SHARED ${project_sources} ${project_extra_sources} ${project_headers})
 target_link_libraries(harfbuzz ${THIRD_PARTY_LIBS})
+if (WIN32 AND NOT MINGW)
+  target_compile_definitions(harfbuzz PRIVATE HB_DLL_EXPORT)
+endif ()
 if (MINGW)
     target_compile_options(harfbuzz PRIVATE "-Wa,-mbig-obj")
 endif()
