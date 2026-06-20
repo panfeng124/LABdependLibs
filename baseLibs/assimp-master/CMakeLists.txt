@@ -34,6 +34,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #----------------------------------------------------------------------
+
+# Enable Clang unsafe buffer usage warning for memory safety
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wunsafe-buffer-usage)
+endif()
+
 SET(CMAKE_POLICY_DEFAULT_CMP0012 NEW)
 SET(CMAKE_POLICY_DEFAULT_CMP0074 NEW)
 SET(CMAKE_POLICY_DEFAULT_CMP0092 NEW)
@@ -98,8 +104,8 @@ option(ASSIMP_HUNTER_ENABLED "Enable Hunter package manager support" OFF)
 IF(ASSIMP_HUNTER_ENABLED)
   include("cmake-modules/HunterGate.cmake")
   HunterGate(
-    URL "https://github.com/cpp-pm/hunter/archive/v0.25.8.tar.gz"
-    SHA1 "26c79d587883ec910bce168e25f6ac4595f97033"
+    URL "https://github.com/cpp-pm/hunter/archive/v0.26.9.tar.gz"
+    SHA1 "a962c9f0cfd6f8fc62ea25943d89debfa61d4d4a"
   )
   ADD_DEFINITIONS(-DASSIMP_USE_HUNTER)
 ENDIF()
@@ -155,10 +161,9 @@ OPTION( ASSIMP_INSTALL
   "Disable this if you want to use assimp as a submodule."
   ON
 )
-message("panFeng:set ASSIMP_WARNINGS_AS_ERRORS off")
 OPTION ( ASSIMP_WARNINGS_AS_ERRORS
-        "Treat all warnings as errors."
-        OFF
+  "Treat all warnings as errors."
+  ON
 )
 OPTION ( ASSIMP_ASAN
   "Enable AddressSanitizer."
