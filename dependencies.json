@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "libraries": [
+    {"name":"zlib", "source":"baseLibs/assimp-master/contrib/zlib", "adapter":"zlib", "dependencies":[], "options":{}, "licenses":["LICENSE"]},
+    {"name":"brotli", "source":"baseLibs/brotli-master", "dependencies":[], "options":{"BROTLI_DISABLE_TESTS":"ON"}, "licenses":["LICENSE"]},
+    {"name":"libpng", "source":"baseLibs/libpng-1.6.40", "dependencies":["zlib"], "options":{"PNG_SHARED":"ON","PNG_STATIC":"OFF","PNG_TESTS":"OFF","PNG_EXECUTABLES":"OFF","ZLIB_LIBRARY":"{zlib}/lib/zlibstatic.lib","ZLIB_INCLUDE_DIR":"{zlib}/include"}, "licenses":["LICENSE"]},
+    {"name":"freetype", "source":"baseLibs/freetype-master", "dependencies":["zlib","libpng","brotli"], "options":{"FT_DISABLE_HARFBUZZ":"ON","FT_DISABLE_BZIP2":"ON","FT_REQUIRE_ZLIB":"ON","FT_REQUIRE_PNG":"ON","FT_REQUIRE_BROTLI":"ON","ZLIB_LIBRARY":"{zlib}/lib/zlibstatic.lib","ZLIB_INCLUDE_DIR":"{zlib}/include"}, "licenses":["LICENSE.TXT","docs/FTL.TXT","docs/GPLv2.TXT"]},
+    {"name":"harfbuzz", "source":"baseLibs/harfbuzz-main", "adapter":"harfbuzz", "dependencies":["freetype"], "options":{"HB_HAVE_FREETYPE":"ON","HB_BUILD_UTILS":"OFF","HB_BUILD_SUBSET":"ON"}, "licenses":["COPYING"]},
+    {"name":"glfw", "source":"baseLibs/glfw-master", "dependencies":[], "options":{"GLFW_BUILD_EXAMPLES":"OFF","GLFW_BUILD_TESTS":"OFF","GLFW_BUILD_DOCS":"OFF","GLFW_INSTALL":"ON","USE_MSVC_RUNTIME_LIBRARY_DLL":"ON"}, "licenses":["LICENSE.md"]},
+    {"name":"glm", "source":"baseLibs/glm-master", "adapter":"glm", "dependencies":[], "options":{}, "licenses":["copying.txt"]},
+    {"name":"libhv", "source":"baseLibs/libhv-master", "dependencies":[], "stageDirectories":["cmake","base","ssl","event","util","cpputil","evpp","http","protocol","mqtt"], "options":{"BUILD_SHARED":"ON","BUILD_STATIC":"OFF","BUILD_EXAMPLES":"OFF","BUILD_UNITTEST":"OFF","BUILD_FOR_MT":"OFF"}, "licenses":["LICENSE"]},
+    {"name":"lunasvg", "source":"baseLibs/lunasvg", "dependencies":[], "options":{"LUNASVG_BUILD_EXAMPLES":"OFF","PLUTOVG_BUILD_EXAMPLES":"OFF","USE_SYSTEM_PLUTOVG":"OFF"}, "licenses":["LICENSE","plutovg/LICENSE"]},
+    {"name":"nfd", "source":"baseLibs/nativefiledialog-extended-master", "dependencies":[], "options":{"NFD_BUILD_TESTS":"OFF","NFD_BUILD_SDL2_TESTS":"OFF","NFD_INSTALL":"ON"}, "licenses":["LICENSE"]},
+    {"name":"openal", "source":"baseLibs/openal-soft-master", "dependencies":[], "options":{"ALSOFT_UTILS":"OFF","ALSOFT_EXAMPLES":"OFF","ALSOFT_TESTS":"OFF","ALSOFT_INSTALL":"ON","ALSOFT_INSTALL_UTILS":"OFF","ALSOFT_INSTALL_EXAMPLES":"OFF","ALSOFT_UPDATE_BUILD_VERSION":"OFF","FORCE_STATIC_VCRT":"OFF"}, "licenses":["COPYING"]},
+    {"name":"yoga", "source":"baseLibs/yoga-main", "adapter":"yoga", "dependencies":[], "options":{}, "licenses":["LICENSE"]},
+    {"name":"assimp", "source":"baseLibs/assimp-master", "dependencies":["zlib"], "options":{"ASSIMP_BUILD_TESTS":"OFF","ASSIMP_BUILD_ASSIMP_TOOLS":"OFF","ASSIMP_BUILD_SAMPLES":"OFF","ASSIMP_BUILD_ZLIB":"OFF","ASSIMP_BUILD_DRACO":"OFF","ASSIMP_WARNINGS_AS_ERRORS":"OFF","ASSIMP_INSTALL":"ON","ASSIMP_INSTALL_PDB":"OFF","USE_STATIC_CRT":"OFF","ZLIB_LIBRARY":"{zlib}/lib/zlibstatic.lib","ZLIB_INCLUDE_DIR":"{zlib}/include"}, "licenses":["LICENSE","contrib/zip/UNLICENSE","contrib/utf8cpp/source/utf8.h"]},
+    {"name":"sqlite3", "source":"pluginLibs/sqlite3/sqlite3", "adapter":"sqlite3", "dependencies":[], "options":{}, "licenses":[]}
+  ],
+  "external": [
+    {"name":"libffi", "source":"baseLibs/libffi-master", "reason":"Separate MSYS2/autotools build; see scripts/Build-Libffi.ps1."},
+    {"name":"ffmpeg", "reason":"Only prebuilt outputs are present; no FFmpeg source in this repository."},
+    {"name":"legacy-headers", "reason":"utfcpp, zip and other manually managed headers remain in result/libHeaders."}
+  ]
+}

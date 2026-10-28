@@ -1,3 +1,5 @@
+> 以下保留为旧版手工构建记录。新的 Windows 一键构建、产物打包和迁移方法见 [README.md](README.md)。
+
 # libFFI编译
  
 在windows编译libffi需要使用msys2  
