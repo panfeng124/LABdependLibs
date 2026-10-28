@@ -83,3 +83,4 @@ jniLibs
 *.yuv
 /baseLibs/lunasvg/cmake-build-debug/
 /baseLibs/lunasvg/cmake-build-release/
+result
