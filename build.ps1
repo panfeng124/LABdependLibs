@@ -29,12 +29,13 @@ foreach ($entry in $buildPlan) {
 if ($Plan) {
     Write-Host "Configuration: $Configuration; x64; shared libraries + MSVC DLL runtime (MD/MDd)"
     Write-Host ('Build order: ' + ($buildPlan.name -join ' -> '))
-    Write-Host 'External: libffi uses scripts/Build-Libffi.ps1; FFmpeg remains prebuilt.'
+    Write-Host 'Copy prebuilt/windows-x64 to the LAB result paths before compiling. FFmpeg is supplied by this SDK.'
     if ($IncludeLibffi) { Write-Host 'Also build libffi with MSYS2 + MSVC.' }
     return
 }
 $toolchain = Get-WindowsToolchain $VisualStudioVersion $CMakePath
 if ($IncludeLibffi) { & (Join-Path $root 'scripts/Build-Libffi.ps1') -Check }
+& (Join-Path $root 'scripts/Install-Prebuilt.ps1')
 $profile = "windows-x64-vs$($toolchain.Year)-md"
 $workRoot = Assert-ChildPath (Join-Path $root ".build/$profile/$Configuration") $root
 $outputRoot = Assert-ChildPath (Join-Path $root "result/$profile/$Configuration") $root

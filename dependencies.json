@@ -18,7 +18,7 @@
   ],
   "external": [
     {"name":"libffi", "source":"baseLibs/libffi-master", "reason":"Separate MSYS2/autotools build; see scripts/Build-Libffi.ps1."},
-    {"name":"ffmpeg", "reason":"Manually built Windows x64 MSVC SDK tracked in result/libHeaders and result/libs/win_MSVC."},
-    {"name":"legacy-headers", "reason":"utfcpp, zip and other manually managed headers remain in result/libHeaders."}
+    {"name":"ffmpeg", "reason":"Manually built SDK stored in prebuilt/windows-x64. Install-Prebuilt.ps1 copies it into result."},
+    {"name":"legacy-headers", "reason":"utfcpp, zip and other manually managed headers are stored in prebuilt/windows-x64/include."}
   ]
 }

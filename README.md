@@ -57,7 +57,7 @@ packages/
 
 脚本按依赖顺序执行 `configure → build → install`。再次执行复用 CMake 构建缓存；安装目录每次重新生成，避免旧文件混入。一个库成功后才替换其产物目录；失败立即返回非零退出码，显示日志末尾及路径，保留此前已发布版本。多个库不是一个整体事务：失败前已完成的库会保留本次更新。相同工具链、配置有文件锁，防止两个构建或打包进程同时写入。
 
-脚本不会向原来的 `result/libHeaders`、`result/libs/win_MSVC` 发布，也不会删除 `createAndroidLibs`。生成目录和 ZIP 不进入 Git。`build-info.json` 记录仓库 HEAD，但不递归计算源码哈希；有未提交的源码修改时，不能仅凭 HEAD 复现构建。发布正式版本前应提交所使用的源码与适配脚本。
+Git 中的 Windows 手工 SDK 集中在 `prebuilt/windows-x64/`。运行 `build.cmd` 时，脚本先将其中的头文件、导入库、DLL 和许可证复制到 LAB 使用的 `result/libHeaders` 和 `result/libs/win_MSVC`，再开始编译所选依赖。新编译的库仍按工具链和配置输出到独立目录。`result/` 整体由 Git 忽略。
 
 ## 依赖范围
 
@@ -101,7 +101,11 @@ pacman -S --needed autoconf-wrapper automake-wrapper libtool make tar
 
 ### FFmpeg（Windows x64，手工编译）
 
-FFmpeg 的 Windows x64 SDK 随 Git 检出。换电脑编译 LAB 时，直接使用下面三个位置即可，无需安装 MSYS2 或运行 FFmpeg 构建。当前手工版本标记为 `8.0.git`，提供 avcodec、avformat、avutil、swresample、swscale。
+换电脑后，在仓库根目录执行以下命令即可准备手工 SDK，无需安装 MSYS2、CMake 或 Visual Studio。正常运行 `build.cmd` 也会自动执行这一步。当前 FFmpeg 手工版本标记为 `8.0.git`。
+
+```powershell
+.\scripts\Install-Prebuilt.ps1
+```
 
 | LAB 工程设置 | 仓库内的位置及用法 |
 | --- | --- |
@@ -109,11 +113,11 @@ FFmpeg 的 Windows x64 SDK 随 Git 检出。换电脑编译 LAB 时，直接使�
 | MSVC 链接 | 在 `result/libs/win_MSVC/lib` 中选用 `avcodec.lib`、`avformat.lib`、`avutil.lib`、`swresample.lib`、`swscale.lib` |
 | 运行时部署 | 从 `result/libs/win_MSVC/bin` 将 `avcodec-63.dll`、`avformat-63.dll`、`avutil-61.dll`、`swresample-7.dll`、`swscale-10.dll` 复制到应用程序的 EXE 旁 |
 
-升级时在仓库外手工编译 FFmpeg，将同一次安装生成的这五组头文件、导入库和 DLL 一起更新。保留 DLL 的原始文件名，移除上个版本已淘汰的 FFmpeg 文件，连同版本说明和许可证一起提交。[手工编译备忘](document/Windows%20+%20MSVC%20编译%20FFmpeg%20备忘.md) · [本次产物的许可证](result/libs/win_MSVC/licenses/ffmpeg/COPYING.LGPLv2.1)
+升级时在仓库外手工编译 FFmpeg，用同一次安装生成的文件更新 `prebuilt/windows-x64` 的 `include/`、`lib/`、`bin/` 和 `licenses/ffmpeg/`，保留 DLL 的原始文件名。提交这个目录即可。安装脚本会更新对应的输出文件；升级中已淘汰的旧版本 DLL 可在本地手动清理。[手工编译备忘](document/Windows%20+%20MSVC%20编译%20FFmpeg%20备忘.md) · [本次产物的许可证](prebuilt/windows-x64/licenses/ffmpeg/COPYING.LGPLv2.1)
 
 ### 其他手工资源
 
-`result/libHeaders` 里的 utfcpp、zip 等资源以及原有 `ffi.lib`/DLL，可在保存有这些文件的电脑上通过旧产物快照迁移：
+`prebuilt/windows-x64` 也包含原有的 utfcpp、zip、libffi 等第三方手工资源。安装后，如需连同本机的其他手工输出一起做快照，可执行：
 
 ```powershell
 .\scripts\Package.ps1 -Legacy

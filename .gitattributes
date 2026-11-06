@@ -1,10 +1,8 @@
 /scripts/*.sh text eol=lf
 /build.cmd text eol=crlf
-/result/libs/win_MSVC/bin/*.dll binary
-/result/libs/win_MSVC/lib/*.lib binary
-/result/libs/win_MSVC/licenses/ffmpeg/* text eol=lf
-/result/libHeaders/libavcodec/*.h -text
-/result/libHeaders/libavformat/*.h -text
-/result/libHeaders/libavutil/*.h -text
-/result/libHeaders/libswresample/*.h -text
-/result/libHeaders/libswscale/*.h -text
+/prebuilt/windows-x64/include/** text=auto eol=crlf
+/prebuilt/windows-x64/include/lib*/** -text
+/prebuilt/windows-x64/include/utfcpp/** -text
+/prebuilt/windows-x64/licenses/** text eol=lf
+/prebuilt/windows-x64/bin/*.dll binary
+/prebuilt/windows-x64/lib/*.lib binary
