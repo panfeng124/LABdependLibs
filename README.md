@@ -99,9 +99,21 @@ pacman -S --needed autoconf-wrapper automake-wrapper libtool make tar
 
 脚本会保留 DLL 的实际文件名，不能随意重命名 DLL，否则导入库内记录的名字会失效。当前 Libtool 的 MSVC 安装规则对导入库名称处理有误，因此在 `make` 成功后明确安装链接器生成的 DLL 和导入库，不忽略安装错误，也不把 DLL 当成 `.lib`。
 
-### FFmpeg 与原来的手工资源
+### FFmpeg（Windows x64，手工编译）
 
-本仓库只有 FFmpeg 产物，没有其源码；不会声称能从这里重编 FFmpeg。`result/libHeaders` 里的 utfcpp、zip 等旧资源，以及原有 `ffi.lib`/DLL，仍可通过旧产物快照迁移：
+FFmpeg 的 Windows x64 SDK 随 Git 检出。换电脑编译 LAB 时，直接使用下面三个位置即可，无需安装 MSYS2 或运行 FFmpeg 构建。当前手工版本标记为 `8.0.git`，提供 avcodec、avformat、avutil、swresample、swscale。
+
+| LAB 工程设置 | 仓库内的位置及用法 |
+| --- | --- |
+| C/C++ 包含目录 | `result/libHeaders`，可直接包含 `<libavcodec/avcodec.h>` 等头文件 |
+| MSVC 链接 | 在 `result/libs/win_MSVC/lib` 中选用 `avcodec.lib`、`avformat.lib`、`avutil.lib`、`swresample.lib`、`swscale.lib` |
+| 运行时部署 | 从 `result/libs/win_MSVC/bin` 将 `avcodec-63.dll`、`avformat-63.dll`、`avutil-61.dll`、`swresample-7.dll`、`swscale-10.dll` 复制到应用程序的 EXE 旁 |
+
+升级时在仓库外手工编译 FFmpeg，将同一次安装生成的这五组头文件、导入库和 DLL 一起更新。保留 DLL 的原始文件名，移除上个版本已淘汰的 FFmpeg 文件，连同版本说明和许可证一起提交。[手工编译备忘](document/Windows%20+%20MSVC%20编译%20FFmpeg%20备忘.md) · [本次产物的许可证](result/libs/win_MSVC/licenses/ffmpeg/COPYING.LGPLv2.1)
+
+### 其他手工资源
+
+`result/libHeaders` 里的 utfcpp、zip 等资源以及原有 `ffi.lib`/DLL，可在保存有这些文件的电脑上通过旧产物快照迁移：
 
 ```powershell
 .\scripts\Package.ps1 -Legacy

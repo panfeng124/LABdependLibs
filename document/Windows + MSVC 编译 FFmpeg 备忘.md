@@ -437,14 +437,12 @@ ffmpeg-install/
 │   ├── libswresample/
 │   └── libswscale/
 │
-├── lib/
-│   ├── avcodec.lib
-│   ├── avformat.lib
-│   ├── avutil.lib
-│   ├── swresample.lib
-│   └── swscale.lib
-│
-└── bin/
+└── bin/                 # 本次 MSVC 安装的导入库也在 bin/
+    ├── avcodec.lib
+    ├── avformat.lib
+    ├── avutil.lib
+    ├── swresample.lib
+    ├── swscale.lib
     ├── avcodec-*.dll
     ├── avformat-*.dll
     ├── avutil-*.dll
