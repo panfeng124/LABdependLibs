@@ -1,502 +1,114 @@
-# Windows + MSVC 编译 FFmpeg
+# Windows + MSVC 编译 FFmpeg 备忘
 
-目标：
+## 日常增量编译
 
-```text
-Windows
-MSVC
-MSYS2
-FFmpeg shared libraries
-```
+适用于已有 `ffmpeg-build`、沿用上次配置、只改了源码的情况。首次搭建先看[安装构建工具](#安装构建工具)，首次编译或更换配置看[配置并编译](#配置并编译)。
 
-主要用于给 C++ 项目提供：
-
-```text
-avformat
-avcodec
-avutil
-swresample
-swscale
-```
-
----
-
-## 1. 安装 MSYS2
-
-安装到默认目录：
-
-```text
-C:\msys64
-```
-
-安装完成后更新：
-
-```bash
-pacman -Syu
-```
-
-如果提示关闭窗口，重新打开 MSYS2，再执行一次：
-
-```bash
-pacman -Syu
-```
-
-安装 FFmpeg 构建工具：
-
-```bash
-pacman -S make diffutils nasm pkgconf
-```
-
----
-
-## 2. 启动 MSVC + MSYS2 环境
-
-先打开：
-
-```text
-x64 Native Tools Command Prompt for VS
-```
-
-确认：
-
-```cmd
-cl
-```
-
-可以正常找到 MSVC。
-
-然后从该终端启动 MSYS2：
+**1.** 打开 Visual Studio 的 **x64 Native Tools Command Prompt**，执行以下 CMD 命令，让 MSYS2 继承 x64 编译环境。
 
 ```cmd
 C:\msys64\msys2_shell.cmd -use-full-path
 ```
 
-这样：
-
-```text
-MSYS2 提供：
-    bash
-    configure
-    make
-    nasm
-
-Visual Studio 提供：
-    cl.exe
-    link.exe
-    lib.exe
-```
-
----
-
-## 3. 检查编译器
+**2.** 在新打开的 **MSYS2 Bash** 中执行以下命令。每次打开新终端都要设置一次。换工作目录时，只需改 `ROOT`。
 
 ```bash
-which cl
-which link
-```
+ROOT=/f/PF/FFMpegBuild
+SRC="$ROOT/FFmpeg"
+BUILD="$ROOT/ffmpeg-build"
+PREFIX="$ROOT/ffmpeg-install"
 
-正常情况下都应该指向 Visual Studio：
-
-```text
-/c/Program Files/Microsoft Visual Studio/.../cl
-/c/Program Files/Microsoft Visual Studio/.../link
-```
-
-### link.exe 冲突
-
-MSYS2 自己也存在：
-
-```text
-/usr/bin/link
-```
-
-如果：
-
-```bash
-which link
-```
-
-得到：
-
-```text
-/usr/bin/link
-```
-
-说明 MSYS2 的 `link.exe` 抢占了 MSVC linker。
-
-可以先让 MSVC 目录优先：
-
-```bash
-MSVC_BIN="$(dirname "$(which cl)")"
-export PATH="$MSVC_BIN:$PATH"
+MSVC_CL="$(command -v cl.exe)" && export PATH="$(dirname "$MSVC_CL"):$PATH"
 hash -r
+type -P cl.exe link.exe lib.exe
 ```
 
-再次：
+三行路径都应指向 Visual Studio 的 x64 工具目录。如果缺少工具或出现 `/usr/bin/link.exe`，先看下方的[工具链排错](#工具链排错)。
+
+**3.** 编译并安装。命令会在出错的步骤停下。
 
 ```bash
-which link
+cd "$BUILD" && make -j"$(nproc)" && make install
 ```
 
-如果仍然指向 `/usr/bin/link`，可以改名：
+## 安装构建工具
+
+安装 Visual Studio 的 x64 C++ 工具和 Windows SDK。将 MSYS2 安装到 `C:\msys64`，在 MSYS2 Bash 中更新软件包。
 
 ```bash
-mv /usr/bin/link.exe /usr/bin/link.exe.bak
-hash -r
+pacman -Syu
 ```
 
----
-
-## 4. 验证 MSVC 是否正常
+如果更新提示关闭终端，重新打开 MSYS2，再运行一次 `pacman -Syu`。然后安装构建工具。
 
 ```bash
-echo 'int main(void) { return 0; }' > test.c
-cl.exe test.c
+pacman -S --needed make diffutils nasm pkgconf
 ```
 
-应该生成：
+## 配置并编译
 
-```text
-test.obj
-test.exe
-```
+将 FFmpeg 源码放在 `F:\PF\FFMpegBuild\FFmpeg`。先完成“日常增量编译”的第 1、2 步，在同一个 Bash 中执行下面的命令。源码、编译和安装各用一个目录。
 
-执行：
+更换 FFmpeg 版本、工具链或构建选项时，可先把 `BUILD` 和 `PREFIX` 改为新的目录名，保留旧产物，同时避免混入上一版的头文件或 DLL。
 
 ```bash
-./test.exe
+mkdir -p "$BUILD" && cd "$BUILD" &&
+"$SRC/configure" \
+    --toolchain=msvc \
+    --prefix="$PREFIX" \
+    --enable-shared \
+    --disable-static \
+    --disable-programs \
+    --disable-doc \
+    --disable-avdevice \
+    --disable-avfilter &&
+make -j"$(nproc)" && make install
+```
+
+本配置为 C++ 项目构建五个动态库：`avformat`、`avcodec`、`avutil`、`swresample`、`swscale`。`--disable-programs` 会跳过 `ffmpeg.exe`、`ffprobe.exe` 和 `ffplay.exe`。旧笔记中的 `--disable-postproc` 已从本配置移除。切换源码版本时，可用 `"$SRC/configure" --help` 核对可用选项。
+
+## 安装产物与 C++ 接入
+
+默认安装目录为 `F:\PF\FFMpegBuild\ffmpeg-install`。本机这次 MSVC 构建的布局如下。
+
+| 用途 | 安装位置 | C++ 项目如何使用 |
+| --- | --- | --- |
+| 编译 | `include/libavcodec/`、`include/libavformat/` 等 | 将 `include/` 加入头文件搜索路径 |
+| 链接 | `bin/avcodec.lib`、`bin/avformat.lib` 等 | 将导入库所在目录加入库搜索路径，链接项目使用的 `.lib` |
+| 运行 | `bin/avcodec-*.dll`、`bin/avformat-*.dll` 等 | 部署时可将同一批构建的五个 DLL 放到应用程序的 `.exe` 旁 |
+| 辅助文件 | `lib/*.def`、`lib/pkgconfig/` | 模块定义和 pkg-config 元数据 |
+
+升级或更换安装包后，用下面的命令确认导入库和 DLL 的实际位置。DLL 文件名中的版本号会随库版本变化。
+
+```bash
+find "$PREFIX" -type f \( -name '*.lib' -o -name '*.dll' \) | sort
+```
+
+## 工具链排错
+
+**找不到 cl.exe，或 link.exe 指向 /usr/bin。** 从 x64 Native Tools Command Prompt 运行 `where cl` 确认 MSVC 已加载，再按日常流程启动 MSYS2 并设置 PATH。如果编译器能启动但找不到头文件或系统库，执行 `echo "$INCLUDE"` 和 `echo "$LIB"`，检查两者是否包含 MSVC 和 Windows SDK 的对应目录。
+
+**configure 报 C compiler test failed。** 先在当前编译目录查看失败的编译、链接命令和错误信息。
+
+```bash
+grep -n -B 10 -A 30 'C compiler test' "$BUILD/ffbuild/config.log"
+```
+
+用最小程序单独验证当前终端能否编译、链接和运行。输出 `0` 表示成功。
+
+```bash
+(
+    cd "$(mktemp -d)" &&
+    printf 'int main(void) { return 0; }\n' > test.c &&
+    cl.exe test.c && ./test.exe
+)
 echo $?
 ```
 
-应该输出：
-
-```text
-0
-```
-
-同时可以检查：
+**最小程序成功，但 configure 使用 -o 并报 LNK1136。** 检查日志里的 MSVC 标识。中文输出可能以“用于 x64 的 Microsoft”开头，部分版本的 `configure` 使用 `^Microsoft` 匹配行首，导致探测失败。本机源码已放宽匹配。换用新源码后，可先定位相关判断。
 
 ```bash
-echo "$INCLUDE"
-echo "$LIB"
+grep -n 'VSLANG=1033.*Microsoft' "$SRC/configure"
 ```
 
-应该包含 MSVC 和 Windows SDK 路径。
-
----
-
-## 5. 建立独立编译目录
-
-假设：
-
-```text
-源码：
-F:\PF\FFMpegBuild\FFmpeg
-
-编译：
-F:\PF\FFMpegBuild\ffmpeg-build
-
-安装：
-F:\PF\FFMpegBuild\ffmpeg-install
-```
-
-MSYS2 中对应：
-
-```text
-/f/PF/FFMpegBuild/FFmpeg
-/f/PF/FFMpegBuild/ffmpeg-build
-/f/PF/FFMpegBuild/ffmpeg-install
-```
-
-不要使用：
-
-```text
-F://PF//FFMpegBuild//FFmpeg
-```
-
-统一使用 MSYS2 Unix 路径格式。
-
-进入编译目录：
-
-```bash
-cd /f/PF/FFMpegBuild/ffmpeg-build
-```
-
----
-
-## 6. configure
-
-```bash
-/f/PF/FFMpegBuild/FFmpeg/configure \
-    --toolchain=msvc \
-    --prefix=/f/PF/FFMpegBuild/ffmpeg-install \
-    --enable-shared \
-    --disable-static \
-    --disable-programs \
-    --disable-doc \
-    --disable-avdevice \
-    --disable-avfilter
-```
-
-这里暂时不做极限裁剪。
-
-主要保留：
-
-```text
-libavformat
-libavcodec
-libavutil
-libswresample
-libswscale
-```
-
-不需要：
-
-```text
-ffmpeg.exe
-ffprobe.exe
-ffplay.exe
-libavdevice
-libavfilter
-```
-
-新版 FFmpeg 已经没有：
-
-```bash
---disable-postproc
-```
-
-不要再添加这个选项。
-
----
-
-## 7. MSVC 中文环境导致 configure 识别失败
-
-如果出现：
-
-```text
-cl.exe is unable to create an executable file.
-C compiler test failed.
-```
-
-先查看：
-
-```bash
-grep -n -A 30 -B 10 "C compiler test" ffbuild/config.log
-```
-
-如果发现类似：
-
-```text
-cl.exe -options:strict -c -o xxx/test.o xxx/test.c
-
-用于 x64 的 Microsoft (R) C/C++ 优化编译器 ...
-
-LNK1136: 无效或损坏的文件
-```
-
-问题通常是：
-
-```text
-FFmpeg 没有正确识别 cl.exe 为 MSVC。
-```
-
-正常 MSVC 编译 `.obj` 应使用：
-
-```text
--Fo
-```
-
-但错误情况下 FFmpeg 使用了：
-
-```text
--o
-```
-
-### 原因
-
-FFmpeg `configure` 中存在类似：
-
-```bash
-grep -q ^Microsoft
-```
-
-而中文 MSVC 输出可能是：
-
-```text
-用于 x64 的 Microsoft (R) C/C++ 优化编译器 ...
-```
-
-因此并不是以 `Microsoft` 开头，检测失败。
-
-### 解决
-
-在 FFmpeg 的：
-
-```text
-configure
-```
-
-中搜索：
-
-```bash
-grep -q ^Microsoft
-```
-
-把相关判断：
-
-```bash
-grep -q ^Microsoft
-```
-
-改为：
-
-```bash
-grep -q Microsoft
-```
-
-例如：
-
-```bash
-VSLANG=1033 $_cc -nologo- 2>&1 | grep -q Microsoft
-```
-
-以及：
-
-```bash
-_ident=$(VSLANG=1033 $_cc 2>&1 | grep Microsoft | head -n1 | tr -d '\r')
-```
-
-`lib.exe` 相关检测如果也使用：
-
-```bash
-grep -q ^Microsoft
-```
-
-同样改成：
-
-```bash
-grep -q Microsoft
-```
-
----
-
-## 8. 修改 configure 后重新编译
-
-清理旧 build：
-
-```bash
-cd /f/PF/FFMpegBuild/ffmpeg-build
-rm -rf ./*
-```
-
-重新执行：
-
-```bash
-/f/PF/FFMpegBuild/FFmpeg/configure \
-    --toolchain=msvc \
-    --prefix=/f/PF/FFMpegBuild/ffmpeg-install \
-    --enable-shared \
-    --disable-static \
-    --disable-programs \
-    --disable-doc \
-    --disable-avdevice \
-    --disable-avfilter
-```
-
-如果 configure 成功，再编译：
-
-```bash
-make -j$(nproc)
-```
-
-然后安装：
-
-```bash
-make install
-```
-
----
-
-## 9. 最终产物
-
-安装目录：
-
-```text
-F:\PF\FFMpegBuild\ffmpeg-install
-```
-
-主要内容：
-
-```text
-ffmpeg-install/
-├── include/
-│   ├── libavcodec/
-│   ├── libavformat/
-│   ├── libavutil/
-│   ├── libswresample/
-│   └── libswscale/
-│
-├── lib/
-│   ├── avcodec.lib
-│   ├── avformat.lib
-│   ├── avutil.lib
-│   ├── swresample.lib
-│   └── swscale.lib
-│
-└── bin/
-    ├── avcodec-*.dll
-    ├── avformat-*.dll
-    ├── avutil-*.dll
-    ├── swresample-*.dll
-    └── swscale-*.dll
-```
-
----
-
-## 10. 最短流程
-
-以后重新编译时主要就是：
-
-```text
-1. 打开 x64 Native Tools Command Prompt
-2. 启动：
-   C:\msys64\msys2_shell.cmd -use-full-path
-
-3. 检查：
-   which cl
-   which link
-
-4. 进入：
-   cd /f/PF/FFMpegBuild/ffmpeg-build
-
-5. configure
-
-6. make -j$(nproc)
-
-7. make install
-```
-
-如果 `configure` 再次出现：
-
-```text
-C compiler test failed
-```
-
-优先检查：
-
-```text
-ffbuild/config.log
-```
-
-重点确认 FFmpeg 调用 MSVC 时是否使用：
-
-```text
--Fo
-```
-
-而不是：
-
-```text
--o
-```
+如果仍有行首限制且日志符合上述症状，只调整 `cl.exe`、编译器标识 `_ident` 和 `lib.exe` 探测处的匹配：将 `grep -q ^Microsoft` 改为 `grep -q Microsoft`，将提取标识的 `grep ^Microsoft` 改为 `grep Microsoft`。保留原有 `VSLANG=1033` 和其余判断。然后选一个空的 `BUILD` 目录，重新执行“配置并编译”，在日志中确认对象文件输出参数为 `-Fo`。
