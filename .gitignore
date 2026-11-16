@@ -35,6 +35,7 @@ Makefile
 
 # ndk-build files
 obj/
+!baseLibs/assimp-master/code/AssetLib/Obj/
 libs/
 
 # Gradle files
