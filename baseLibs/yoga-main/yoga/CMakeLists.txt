@@ -22,7 +22,13 @@ file(GLOB SOURCES CONFIGURE_DEPENDS
         ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/**/*.cpp)
 
-add_library(yogacore SHARED ${SOURCES})
+if(IOS)
+    set(yogacore_library_type STATIC)
+else()
+    set(yogacore_library_type SHARED)
+endif()
+
+add_library(yogacore ${yogacore_library_type} ${SOURCES})
 
 if (MSVC)
     set_target_properties(yogacore PROPERTIES
@@ -35,10 +41,12 @@ if (ANDROID)
     target_link_libraries(yogacore log)
 endif ()
 
-check_ipo_supported(RESULT result)
-if (result)
-    set_target_properties(yogacore PROPERTIES
-            CMAKE_INTERPROCEDURAL_OPTIMIZATION true)
+if (NOT IOS)
+    check_ipo_supported(RESULT result)
+    if (result)
+        set_target_properties(yogacore PROPERTIES
+                CMAKE_INTERPROCEDURAL_OPTIMIZATION true)
+    endif ()
 endif ()
 
 target_include_directories(yogacore

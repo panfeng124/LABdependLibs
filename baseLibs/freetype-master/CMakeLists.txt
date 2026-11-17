@@ -450,8 +450,14 @@ if (NOT DISABLE_FORCE_DEBUG_POSTFIX)
 endif ()
 
 
+if(IOS)
+    set(freetype_library_type STATIC)
+else()
+    set(freetype_library_type SHARED)
+endif()
+
 add_library(freetype
-        SHARED
+        ${freetype_library_type}
   ${PUBLIC_HEADERS}
   ${PUBLIC_CONFIG_HEADERS}
   ${PRIVATE_HEADERS}
